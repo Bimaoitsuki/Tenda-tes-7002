@@ -1,0 +1,8 @@
+# add.py full endpoint 
+xvfb-run --auto-servernum python3 add.py CIOT16D9D920
+xvfb-run --auto-servernum python3 add.py CIOT0927BEC0
+
+# net.py untuk delete gemport 
+xvfb-run --auto-servernum python3 net.py CIOT16D9D920
+xvfb-run --auto-servernum python3 net.py CIOT0927BEC0
+
