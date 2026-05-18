@@ -1,277 +1,189 @@
-# Tenda-tes-7002
-Screper web ui olt pemutusan sumber internet via olt. Only os ubuntu 
 
-```
-Dokumentasi Developer – OLT GPON Tenda Automation
+```markdown
+# Tenda TES-7002 OLT Automation
 
-Proyek: Otomatisasi operasional ONT (Delete/Add Gemport) untuk kebutuhan Billing
-IP OLT: 100.10.1.254
-Device: Tenda tes 7001/7002
-Frimware: V3.0.0.47
-Hardware: V0.0.0.1
-Kredensial: admin / admin
-Bahasa: Python 3.14+
-Dependensi utama: selenium, xvfb (headless)
-```
----
+![Python](https://img.shields.io/badge/python-3.14+-blue.svg)
+![Selenium](https://img.shields.io/badge/selenium-4.x-green.svg)
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
-1. Arsitektur Umum
-
-```
-┌─────────────────────────────────────────────────────┐
-│  Terminal (SSH)                                      │
-│  └─ xvfb-run python3 <script>.py <SN>               │
-└──────────────────────────┬──────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────┐
-│  Selenium WebDriver (Chromium)                      │
-│  - login                                             │
-│  - navigasi halaman Authorized List                  │
-│  - klik Configure, tab Gemport                       │
-│  - klik Delete / Add + konfirmasi                    │
-└──────────────────────────┬──────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────┐
-│  Koordinat & mapping (file JSON)                    │
-│  - gemport_CIOT16D9D920_mapping.json                │
-│  - confirm_dialog_CIOT16D9D920.json                 │
-│  - add_gemport_CIOT16D9D920.json                    │
-└─────────────────────────────────────────────────────┘
-```
-
-Semua interaksi dilakukan melalui browser headless (Chromium) dengan bantuan X Virtual Framebuffer (xvfb).
+Otomatisasi operasional ONT pada OLT GPON Tenda TES-7002 / TES-7001 melalui antarmuka web.  
+Program ini dapat **menghapus (delete)** dan **menambah (add)** konfigurasi Gemport pada ONT tertentu secara otomatis.
 
 ---
 
-2. Struktur File Proyek
+## Daftar Isi
+- [Fitur](#fitur)
+- [Prasyarat](#prasyarat)
+- [Instalasi](#instalasi)
+- [Penggunaan](#penggunaan)
+- [Struktur Proyek](#struktur-proyek)
+- [Pemetaan Koordinat](#pemetaan-koordinat)
+- [Pemecahan Masalah](#pemecahan-masalah)
+- [Catatan Penting](#catatan-penting)
+- [Lisensi](#lisensi)
+
+---
+
+## Fitur
+- ✅ Login otomatis ke OLT Tenda (IP `100.10.1.254`, user `admin`/`admin`)
+- ✅ Mendapatkan daftar semua SN ONT dari halaman *Authorized List*
+- ✅ Buka halaman **Configure** → tab **Gemport**
+- ✅ **Delete** konfigurasi Gemport (dengan klik tombol Delete → konfirmasi OK)
+- ✅ **Add** konfigurasi Gemport baru (isi form → klik Apply)
+- ✅ Menyimpan screenshot setiap langkah penting (folder `screenshots/`)
+- ✅ Bekerja dalam mode **headless** (`xvfb-run`) untuk server tanpa GUI
+
+---
+
+## Prasyarat
+| Komponen | Versi / Catatan |
+|----------|----------------|
+| Sistem operasi | Ubuntu 22.04 / 26.04 atau Debian-based |
+| Python | 3.14+ |
+| Chromium / Chrome | `chromium-browser` (≥ 147.0) |
+| ChromeDriver | Tersedia otomatis bersama `chromium-chromedriver` |
+| Xvfb | Untuk headless (jika tidak ada display) |
+| Koneksi jaringan | Ke `100.10.1.254` (OLT) |
+
+---
+
+## Instalasi
+
+### 1. Clone repositori
+```bash
+git clone https://github.com/Bimaoitsuki/Tenda-tes-7002.git
+cd Tenda-tes-7002
+```
+
+2. Install dependensi Python
+
+```bash
+pip install -r requirements.txt
+```
+
+3. Install Chromium & ChromeDriver
+
+```bash
+sudo apt update
+sudo apt install chromium-browser chromium-chromedriver
+```
+
+4. Install Xvfb (untuk lingkungan headless)
+
+```bash
+sudo apt install xvfb
+```
+
+---
+
+Penggunaan
+
+🔹 Hapus konfigurasi Gemport (Delete)
+
+```bash
+xvfb-run --auto-servernum python3 net.py <SN_ONT>
+```
+
+Contoh:
+
+```bash
+xvfb-run --auto-servernum python3 net.py CIOT16D9D920
+```
+
+🔹 Tambah konfigurasi Gemport baru (Add)
+
+```bash
+xvfb-run --auto-servernum python3 add.py <SN_ONT>
+```
+
+Contoh:
+
+```bash
+xvfb-run --auto-servernum python3 add.py CIOT16D9D920
+```
+
+Catatan: Program akan menyimpan screenshot di folder screenshots/ dan log di file *.log.
+
+---
+
+Struktur Proyek
 
 ```
-/var/www/
-├── net.py                    # Auto delete (dengan argumen SN)
-├── add.py                    # Auto add Gemport (dengan argumen SN)
-├── map_gemport_add.py        # Mapping dialog Add Gemport
-├── olt_gemport_delete_mapper.py  # Mapping tombol Delete
-├── olt_gemport_delete_confirm.py # Mapping tombol OK/Cancel
-├── config_maps/              # Folder hasil mapping JSON
+Tenda-tes-7002/
+├── net.py                       # Hapus Gemport (utama)
+├── add.py                       # Tambah Gemport (utama)
+├── map_gemport_add.py           # Utilitas mapping dialog Add
+├── olt_gemport_delete_mapper.py # Utilitas mapping tombol Delete
+├── olt_gemport_delete_confirm.py# Utilitas mapping dialog OK/Cancel
+├── requirements.txt             # Dependensi Python
+├── config_maps/                 # File JSON hasil mapping koordinat
 │   ├── gemport_CIOT16D9D920_mapping.json
 │   ├── confirm_dialog_CIOT16D9D920.json
 │   └── add_gemport_CIOT16D9D920.json
-└── screenshots/              # Screenshot debug
+├── screenshots/                 # Screenshot debug (otomatis dibuat)
+└── README.md                    # Dokumentasi ini
 ```
 
 ---
 
-3. Kode Inti (Template)
+Pemetaan Koordinat
 
-3.1. Setup driver
-
-```python
-def get_driver():
-    options = webdriver.ChromeOptions()
-    options.add_argument('--no-sandbox')
-    options.add_argument('--disable-dev-shm-usage')
-    options.add_argument('--window-size=1920,1080')
-    options.add_argument('--start-maximized')
-    options.binary_location = "/usr/bin/chromium-browser"
-    return webdriver.Chrome(options=options)
-```
-
-3.2. Login
-
-```python
-def login(driver):
-    driver.get("http://100.10.1.254/login.html")
-    wait = WebDriverWait(driver, 10)
-    username = wait.until(EC.presence_of_element_located((By.NAME, "username")))
-    password = driver.find_element(By.NAME, "password")
-    username.send_keys("admin")
-    password.send_keys("admin")
-    driver.find_element(By.ID, "submit").click()
-    time.sleep(3)
-    return "login" not in driver.current_url.lower()
-```
-
-3.3. Klik Configure pada SN
-
-```python
-def click_configure(driver, sn):
-    driver.get("http://100.10.1.254/index.html#/manage/authorized-list")
-    rows = driver.find_elements(By.CSS_SELECTOR, "#authorized-module tbody tr")
-    for row in rows:
-        sn_cell = row.find_element(By.CSS_SELECTOR, "td[id$='-sn'] p.fixed")
-        if sn_cell.text.strip() == sn:
-            row.find_elements(By.CSS_SELECTOR, "span.operate__col--edit")[0].click()
-            return True
-    return False
-```
-
-3.4. Klik tab Gemport
-
-```python
-def click_gemport_tab(driver):
-    tab = WebDriverWait(driver, 5).until(
-        EC.element_to_be_clickable((By.XPATH, "//*[contains(text(),'Gemport')]"))
-    )
-    tab.click()
-    time.sleep(2)
-```
-
-3.5. Klik menggunakan koordinat (fallback andal)
-
-```python
-def click_coord(driver, x, y):
-    driver.execute_script(f"document.elementFromPoint({x+10}, {y+10}).click();")
-```
-
-3.6. Menunggu elemen muncul
-
-```python
-def wait_for_configure_page(driver):
-    for _ in range(30):
-        if driver.find_elements(By.XPATH, "//*[contains(text(),'DBA Template')]"):
-            return True
-        time.sleep(0.5)
-    return False
-```
-
----
-
-4. Alur Program net.py (Delete Gemport)
-
-```python
-sn = sys.argv[1]
-driver = get_driver()
-login(driver)
-click_configure(driver, sn)
-wait_for_configure_page(driver)
-click_gemport_tab(driver)
-# Klik Delete (koordinat 929,233)
-click_coord(driver, 929, 233)
-# Tunggu dialog
-wait = WebDriverWait(driver, 5)
-wait.until(EC.presence_of_element_located((By.XPATH, "//*[contains(text(),'Do you want to Delete?')]")))
-# Klik OK (koordinat 909,184)
-click_coord(driver, 909, 184)
-print("✅ Delete sukses")
-driver.quit()
-```
-
----
-
-5. Alur Program add.py (Add Gemport)
-
-```python
-sn = sys.argv[1]
-driver = get_driver()
-login(driver)
-click_configure(driver, sn)
-wait_for_configure_page(driver)
-click_gemport_tab(driver)
-driver.find_element(By.ID, "gemport-add").click()
-time.sleep(1)
-# Isi form via JavaScript (cari label)
-fill_js = """
-function setByLabel(label, value, isSelect=false) {
-    let spans = [...document.querySelectorAll('*')];
-    for(let el of spans) {
-        if(el.textContent.trim() === label) {
-            let input = el.parentNode.querySelector('input, select');
-            if(input) {
-                if(isSelect) { input.value = value; input.dispatchEvent(new Event('change')); }
-                else { input.value = value; input.dispatchEvent(new Event('input')); }
-                return true;
-            }
-        }
-    }
-    return false;
-}
-setByLabel('Service Name', 'gemport-1');
-setByLabel('Tcont Name', 'tcont-1');
-setByLabel('VLAN Mode', 'Transparent', true);
-"""
-driver.execute_script(fill_js)
-# Klik Apply (koordinat 1086,548)
-click_coord(driver, 1086, 548)
-print("✅ Add sukses")
-driver.quit()
-```
-
----
-
-6. Mapping Koordinat (Cara Mendapatkan)
-
-Jalankan script mapper interaktif:
+Karena tombol pada halaman web sering tidak dapat di‑interact secara langsung, program ini menggunakan koordinat absolut (x, y) untuk mengklik elemen.
+Koordinat diperoleh dengan menjalankan utility mapper interaktif:
 
 ```bash
 xvfb-run --auto-servernum python3 olt_gemport_delete_mapper.py
 ```
 
-Program akan:
+Ikuti instruksi di terminal (pilih nomor SN). Program akan:
 
-· Login, pilih SN (contoh 36 untuk CIOT16D9D920)
-· Navigasi ke Gemport
-· Mencari tombol Delete dan menyimpan koordinat ke gemport_CIOT16D9D920_mapping.json
-· Kemudian klik Delete → tangkap dialog → simpan koordinat OK/Cancel ke confirm_dialog_CIOT16D9D920.json
+1. Login, buka Configure → Gemport
+2. Mencari tombol Delete, menyimpan koordinat ke config_maps/gemport_<SN>.json
+3. Klik Delete, menangkap dialog, menyimpan koordinat OK/Cancel ke confirm_dialog_<SN>.json
 
-File JSON hasil mapping (contoh):
-
-```json
-{
-  "delete_buttons": [{"x": 929, "y": 233}],
-  "confirm_buttons": [
-    {"text": "Cancel", "x": 996, "y": 548},
-    {"text": "OK", "x": 1086, "y": 548}
-  ]
-}
-```
+Perhatian: Koordinat hanya valid untuk resolusi 1920x1080 dengan window maximized. Jika resolusi berubah, ulangi proses mapping.
 
 ---
 
-7. Menjalankan Otomatisasi
-
-```bash
-# Untuk Delete
-xvfb-run --auto-servernum python3 net.py CIOT16D9D920
-
-# Untuk Add
-xvfb-run --auto-servernum python3 add.py CIOT16D9D920
-```
-
-Catatan: Pastikan chromium-browser dan chromedriver terinstall. Jika tidak, install:
-
-```bash
-sudo apt install chromium-browser chromium-chromedriver
-```
-
----
-
-8. Troubleshooting Umum
+Pemecahan Masalah
 
 Error Kemungkinan Penyebab Solusi
-element not interactable Tombol tertutup / belum siap Gunakan click_coord() dengan koordinat dari mapping ulang
-no such element Selector berubah (update UI) Jalankan ulang script mapper untuk mendapatkan koordinat baru
-WebDriverException: unknown error Chromium/ChromeDriver versi mismatch Update chromium dan chromedriver
-Login gagal Kredensial salah atau halaman redirect Cek manual di browser, pastikan name="username" dan id="submit" masih ada
-Halaman configure tidak muncul Klik Configure tidak berhasil Periksa span.operate__col--edit dan apakah SN muncul di tabel
+element not interactable Tombol tertutup / belum siap Gunakan koordinat dari mapping ulang (lihat bagian Pemetaan Koordinat)
+no such element Selector berubah (update firmware) Jalankan ulang program mapper untuk mendapatkan koordinat baru
+WebDriverException Chromium/ChromeDriver versi mismatch sudo apt update && sudo apt upgrade chromium-browser chromium-chromedriver
+Login gagal Kredensial salah atau koneksi bermasalah Coba akses http://100.10.1.254 melalui browser biasa
+Halaman configure tidak muncul Klik Configure tidak berhasil Pastikan SN benar dan ONT dalam status online
 
 ---
 
-9. Catatan Penting
+Catatan Penting
 
-· Koordinat hanya valid untuk resolusi 1920x1080 dengan window maximized. Jika resolusi berubah, lakukan mapping ulang.
-· ID tombol OK pada dialog delete bersifat dinamis (mengandung angka random), karena itu mapping koordinat lebih andal.
-· Semua program menggunakan headless (xvfb-run). Untuk debugging, hapus xvfb-run dan jalankan langsung di lingkungan desktop (aktifkan headless=False).
-· Log proses tersimpan di file *.log (misal gemport_delete_ok_fixed.log).
-
----
-
-10. Lisensi & Kontribusi
-
-Dikembangkan untuk keperluan internal. Diperbolehkan memodifikasi sesuai kebutuhan.
-Maintainer: [solo vibe]
+· Kredensial saat ini di‑hardcode (admin/admin). Untuk lingkungan produksi, gunakan variabel lingkungan atau file konfigurasi terenkripsi.
+· Koordinat bersifat statis dan bergantung pada resolusi layar (1920x1080). Jika menggunakan resolusi berbeda, lakukan mapping ulang.
+· Stabilitas: Program ini bergantung pada struktur HTML antarmuka web OLT. Perubahan firmware dapat merusak kompatibilitas.
+· Screenshot disimpan di folder screenshots/; hapus secara berkala jika tidak diperlukan.
+· Semua operasi bersifat non‑destruktif (tidak mengubah konfigurasi selain Gemport yang ditargetkan). Namun tetap disarankan untuk menguji di lingkungan non‑produksi terlebih dahulu.
 
 ---
 
-Dokumentasi ini mencakup semua aspek teknis yang diperlukan untuk memahami, menggunakan, dan mengembangkan lebih lanjut sistem otomatisasi OLT GPON Tenda.
+Lisensi
+
+Proyek ini dilisensikan di bawah Lisensi MIT – lihat file LICENSE untuk detail lengkap.
+
+---
+
+Kontribusi
+
+Pull request dipersilakan. Untuk perubahan besar, harap buka issue terlebih dahulu untuk mendiskusikan apa yang ingin diubah.
+
+---
+
+Disclaimer
+
+Perangkat lunak ini disediakan "apa adanya", tanpa jaminan apa pun. Penulis tidak bertanggung jawab atas kerusakan atau gangguan layanan yang mungkin timbul akibat penggunaan program ini. Gunakan dengan risiko Anda sendiri.
+
+---
+
+Dibuat dengan ❤️ oleh Bimaoitsuki
+
+```
