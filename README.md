@@ -1,6 +1,8 @@
 
 ```markdown
-# Tenda TES-7002 OLT Automation
+# Tenda TES-7001/7002 OLT Automation
+# Frimware V3.0.0.47 latest
+# Hardware V0.0.0.1
 
 ![Python](https://img.shields.io/badge/python-3.14+-blue.svg)
 ![Selenium](https://img.shields.io/badge/selenium-4.x-green.svg)
