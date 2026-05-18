@@ -187,7 +187,7 @@ function setByLabel(label, value, isSelect=false) {
     }
     return false;
 }
-setByLabel('Service Name', 'gemport-2');
+setByLabel('Service Name', 'gemport-1');
 setByLabel('Tcont Name', 'tcont-1');
 setByLabel('VLAN Mode', 'Transparent', true);
 """
